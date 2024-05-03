@@ -6,6 +6,7 @@ function love.load()
     player.x = 0
     player.y = 0
     player.speed = 5
+    player.diagSpeed = player.speed
 
     background = love.graphics.newImage('sprites/grass.png')
     player.spriteSheet = love.graphics.newImage('sprites/werewolf-SWEN.png')
@@ -24,24 +25,45 @@ end
 
 function love.update(dt)
     local isMoving = false
+    local diagSlow = 1.25
 
     if love.keyboard.isDown("right") then
-        player.x = player.x + player.speed
+        if love.keyboard.isDown("down") or love.keyboard.isDown("up") then
+            player.diagSpeed = player.speed-diagSlow
+        else 
+            player.diagSpeed = player.speed
+        end
+        player.x = player.x + player.diagSpeed
         player.anim = player.animations.right
         isMoving = true
     end     
     if love.keyboard.isDown("left") then
-        player.x = player.x - player.speed
+        if love.keyboard.isDown("down") or love.keyboard.isDown("up") then
+            player.diagSpeed = player.speed-diagSlow
+        else 
+            player.diagSpeed = player.speed
+        end
+        player.x = player.x - player.diagSpeed
         player.anim = player.animations.left
         isMoving = true
     end  
     if love.keyboard.isDown("down") then
-        player.y = player.y + (player.speed-1)
+        if love.keyboard.isDown("left") or love.keyboard.isDown("right") then
+            player.diagSpeed = player.speed-diagSlow
+        else 
+            player.diagSpeed = player.speed
+        end
+        player.y = player.y + (player.diagSpeed-1)
         player.anim = player.animations.down
         isMoving = true
     end  
     if love.keyboard.isDown("up") then
-        player.y = player.y - (player.speed-1)
+        if love.keyboard.isDown("left") or love.keyboard.isDown("right") then
+            player.diagSpeed = player.speed-diagSlow
+        else 
+            player.diagSpeed = player.speed
+        end
+        player.y = player.y - (player.diagSpeed-1)
         player.anim = player.animations.up
         isMoving = true
     end  
