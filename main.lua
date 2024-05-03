@@ -2,13 +2,16 @@ function love.load()
     anim8 = require 'libraries/anim8'   -- importing anim8
     love.graphics.setDefaultFilter("nearest", "nearest")    -- for scaling without blur
 
+    sti = require 'libraries/sti'
+    gameMap = sti('maps/forestmap.lua')
+
     player = {}     
     player.x = 0
     player.y = 0
     player.speed = 5
     player.diagSpeed = player.speed
 
-    background = love.graphics.newImage('sprites/grass.png')
+    --background = love.graphics.newImage('sprites/grass.png')
     player.spriteSheet = love.graphics.newImage('sprites/werewolf-SWEN.png')
 
     player.grid = anim8.newGrid(48,64, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
@@ -76,6 +79,7 @@ function love.update(dt)
 end
 
 function love.draw()
-    love.graphics.draw(background, 0, 0, 0, love.graphics.getWidth() / background:getWidth(), love.graphics.getHeight() / background:getHeight())
-    player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1.5)   -- down anim drawing
+    gameMap:draw()
+    --love.graphics.draw(background, 0, 0, 0, love.graphics.getWidth() / background:getWidth(), love.graphics.getHeight() / background:getHeight())
+    player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1)   -- down anim drawing
 end
