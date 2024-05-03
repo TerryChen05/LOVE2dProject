@@ -1,4 +1,7 @@
 function love.load()
+    camera = require 'libraries/camera'
+    cam = camera()
+    
     anim8 = require 'libraries/anim8'   -- importing anim8
     love.graphics.setDefaultFilter("nearest", "nearest")    -- for scaling without blur
 
@@ -6,14 +9,16 @@ function love.load()
     gameMap = sti('maps/forestmap.lua')
 
     player = {}     
-    player.x = 0
-    player.y = 0
+    player.x = (gameMap.width * gameMap.tilewidth)/2 - 15
+    player.y = gameMap.height * gameMap.tileheight - 50
     player.speed = 5
     player.diagSpeed = player.speed
+    player.level = 1
 
-    --background = love.graphics.newImage('sprites/grass.png')
+    gameFont = love.graphics.newFont(25)
+
+    -- player sprite
     player.spriteSheet = love.graphics.newImage('sprites/werewolf-SWEN.png')
-
     player.grid = anim8.newGrid(48,64, player.spriteSheet:getWidth(), player.spriteSheet:getHeight())
 
     player.animations = {}
@@ -76,10 +81,39 @@ function love.update(dt)
     end 
 
     player.anim:update(dt) -- updates down animation
+    cam:lookAt(player.x, player.y) -- follows player
+
+    local w = love.graphics.getWidth()
+    local h = love.graphics.getHeight()
+
+    -- left and top borders
+    if cam.x < w/2 then
+        cam.x = w/2
+    end
+    if cam.y < h/2 then
+        cam.y = h/2
+    end
+
+    local mapW = gameMap.width * gameMap.tilewidth
+    local mapH = gameMap.height * gameMap.tileheight
+
+    -- right and bottom borders
+    if cam.x > (mapW - w/2) then
+        cam.x = (mapW - w/2)
+    end
+    if cam.y > (mapH - h/2) then
+        cam.y = (mapH- h/2)
+    end
 end
 
 function love.draw()
-    gameMap:draw()
-    --love.graphics.draw(background, 0, 0, 0, love.graphics.getWidth() / background:getWidth(), love.graphics.getHeight() / background:getHeight())
-    player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1)   -- down anim drawing
+    cam:attach()
+        gameMap:drawLayer(gameMap.layers["grass"])
+        gameMap:drawLayer(gameMap.layers["dirt"])
+        gameMap:drawLayer(gameMap.layers["bonus"])
+        --love.graphics.draw(background, 0, 0, 0, love.graphics.getWidth() / background:getWidth(), love.graphics.getHeight() / background:getHeight())
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, nil, 24,32)   -- down anim drawing
+    cam:detach()
+    love.graphics.setFont(gameFont)
+    love.graphics.print("Level: "..player.level)
 end
