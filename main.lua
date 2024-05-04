@@ -1,4 +1,7 @@
 function love.load()
+    windfield = require 'libraries/windfield'
+    world = windfield.newWorld(0, 0)
+
     camera = require 'libraries/camera'
     cam = camera()
     
@@ -8,12 +11,20 @@ function love.load()
     sti = require 'libraries/sti'
     gameMap = sti('maps/forestmap.lua')
 
-    player = {}     
-    player.x = (gameMap.width * gameMap.tilewidth)/2 - 15
-    player.y = gameMap.height * gameMap.tileheight - 50
-    player.speed = 5
+    local spawnX = (gameMap.width * gameMap.tilewidth)/2 - 30
+    local spawnY = gameMap.height * gameMap.tileheight - 65
+
+    player = {}
+    player.collider = world:newBSGRectangleCollider(spawnX, spawnY, 25,35,5) -- wdith, height, corners
+    player.collider:setFixedRotation(true)
+    player.x = spawnX
+    player.y = spawnY
+    player.speed = 190
     player.diagSpeed = player.speed
     player.level = 1
+
+    
+
 
     gameFont = love.graphics.newFont(25)
 
@@ -28,12 +39,25 @@ function love.load()
     player.animations.up = anim8.newAnimation(player.grid('1-3', 4), 0.2) 
 
     player.anim = player.animations.left
+    
+    walls = {}
+    if gameMap.layers['walls'] then
+        for i, obj in pairs(gameMap.layers['walls'].objects) do
+            local wall = world:newRectangleCollider(obj.x, obj.y, obj.width, obj.height)
+            wall:setType('static')
+            table.insert(walls, wall) -- puts wall object into walls table
+        end
+    end
+    
 
 end
 
 function love.update(dt)
     local isMoving = false
-    local diagSlow = 1.25
+    local diagSlow = 45
+
+    local vx = 0    -- collider speed
+    local vy = 0
 
     if love.keyboard.isDown("right") then
         if love.keyboard.isDown("down") or love.keyboard.isDown("up") then
@@ -41,7 +65,7 @@ function love.update(dt)
         else 
             player.diagSpeed = player.speed
         end
-        player.x = player.x + player.diagSpeed
+        vx = player.diagSpeed
         player.anim = player.animations.right
         isMoving = true
     end     
@@ -51,7 +75,7 @@ function love.update(dt)
         else 
             player.diagSpeed = player.speed
         end
-        player.x = player.x - player.diagSpeed
+        vx = -1 * player.diagSpeed
         player.anim = player.animations.left
         isMoving = true
     end  
@@ -61,7 +85,7 @@ function love.update(dt)
         else 
             player.diagSpeed = player.speed
         end
-        player.y = player.y + (player.diagSpeed-1)
+        vy = (player.diagSpeed-1)
         player.anim = player.animations.down
         isMoving = true
     end  
@@ -71,14 +95,21 @@ function love.update(dt)
         else 
             player.diagSpeed = player.speed
         end
-        player.y = player.y - (player.diagSpeed-1)
+        vy = -1 * (player.diagSpeed-1)
         player.anim = player.animations.up
         isMoving = true
     end  
 
+    player.collider:setLinearVelocity(vx, vy)
+
     if isMoving == false then
         player.anim:gotoFrame(2)
     end 
+
+    world:update(dt)
+    player.x = player.collider:getX()
+    player.y = player.collider:getY() -3    -- collider offset
+
 
     player.anim:update(dt) -- updates down animation
     cam:lookAt(player.x, player.y) -- follows player
@@ -112,7 +143,7 @@ function love.draw()
         gameMap:drawLayer(gameMap.layers["dirt"])
         gameMap:drawLayer(gameMap.layers["bonus"])
         --love.graphics.draw(background, 0, 0, 0, love.graphics.getWidth() / background:getWidth(), love.graphics.getHeight() / background:getHeight())
-        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 1, nil, 24,32)   -- down anim drawing
+        player.anim:draw(player.spriteSheet, player.x, player.y, nil, 0.75, nil, 24,32)   -- down anim drawing
     cam:detach()
     love.graphics.setFont(gameFont)
     love.graphics.print("Level: "..player.level)
